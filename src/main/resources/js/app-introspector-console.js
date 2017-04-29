@@ -13,7 +13,7 @@ function initSpringConsole(){
 	    url:'/spring/run',
 	    contentType:'text/plain',
 	    data:text,
-	    success:function(data){
+	    success(data) {
 		$("#resultText").text(typeof(data) == 'string'?data:JSON.stringify(data, null, 4));
 		var end = new Date();
 		$('#exec-info').text('completed in '+ duration(end.getTime()-start) + ' at ' + end.getHours() + ':' +
@@ -30,7 +30,7 @@ function initSpringConsole(){
     }
 
     function showBeanInfo(beanId){
-	$.getJSON('/spring/bean?id='+beanId + '&im=true', function(bean) {
+	$.getJSON('/spring/bean?id='+beanId + '&im=true', bean => {
 	    if(bean["class"]!=null){
 		$('#beanClass').html('<em>' + beanId + '</em>: ' + bean["class"].substr(bean["class"].lastIndexOf('.')+1));
 	    }else{
@@ -38,12 +38,12 @@ function initSpringConsole(){
 	    }
 
 	    var $bf=$('#beanFields').empty();
-	    $.each(bean["properties"], function(key, val){
+	    $.each(bean["properties"], (key, val) => {
 		$bf.append($('<li></li>').addClass('list-group-item').html('<em>' + key + '</em> = ' + val));
 	    });
 
 	    var $bm=$('#beanMethods').empty();
-	    $.each(bean["methods"], function(i, meth){
+	    $.each(bean["methods"], (i, meth) => {
 		$bm.append($('<li></li>').addClass('list-group-item').html(meth.returnType + ' <em>' + meth.name + '</em>' + '('  + meth.paramTypes.join(', ')+ ')'));
 	    });
 	    $('#infoPanel').show();
@@ -51,7 +51,7 @@ function initSpringConsole(){
     }
 
     function loadScript(scriptId){
-	scriptStore.retrieve(scriptId, function(value){
+	scriptStore.retrieve(scriptId, value => {
 	    cm.setValue(value);
 	    $('#scriptName').val(scriptId);
 	});
@@ -66,27 +66,27 @@ function initSpringConsole(){
     function firebaseStore(dataRef){
 	var scriptsRef = dataRef.child('scripts');
 	return {
-	    saveScript:function(name, scriptBody){
+	    saveScript(name, scriptBody) {
 		scriptsRef.child(name).set({content:scriptBody});
 	    },
-	    bindTo:function(elem){
-		scriptsRef.on('child_added', function(snapshot){
+	    bindTo(elem) {
+		scriptsRef.on('child_added', snapshot => {
 		    //console.log('snapshot is ' + JSON.stringify(snapshot));
 		    var name = snapshot.name();
 		    $(elem).append($('<option></option>').attr('value', name).text(name));
 		});
 	    },
-	    retrieve:function(name, callback){
-		scriptsRef.child(name).on('value', function(snapshot){
+	    retrieve(name, callback) {
+		scriptsRef.child(name).on('value', snapshot => {
 		    callback(snapshot.val().content);
 		});
 	    }
-	}
+	};
     }
 
     function localStore(){
 	return {
-	    saveScript:function(name, scriptBody){
+	    saveScript(name, scriptBody) {
 		var stored = JSON.parse(localStorage.getItem('STORED_SCRIPTS'));
 		if(stored==null) stored = {};
 		var isnew = typeof(stored[name])=='undefined';
@@ -96,15 +96,15 @@ function initSpringConsole(){
 		    this.selectField.append($('<option></option>').attr('value', name).text(name));
 		}
 	    },
-	    bindTo:function(elem){
+	    bindTo(elem) {
 		this.selectField = $(elem);
 		var stored = JSON.parse(localStorage.getItem('STORED_SCRIPTS'));
 		var $ss = $(elem);
-		$.each(stored, function(name, value){
+		$.each(stored, (name, value) => {
 		    $ss.append($('<option></option>').attr('value', name).text(name))
 		});
 	    },
-	    retrieve: function(name,callback){
+	    retrieve(name, callback) {
 		var stored = JSON.parse(localStorage.getItem('STORED_SCRIPTS'));
 		callback(stored[name]);
 	    }
@@ -115,11 +115,11 @@ function initSpringConsole(){
     function initScriptStore(){
 	//default to local store
 	scriptStore = localStore();
-	$.ajax({type:'GET', url:'/spring/firebase', contentType:'application/json', success:function(data){
+	$.ajax({type:'GET', url:'/spring/firebase', contentType:'application/json', success(data) {
 	    if(data.firebaseUrl){
 		console.log('connecting to firebase');
 		var dataRef = new Firebase(data.firebaseUrl);
-		dataRef.auth(data.firebaseJwt, function(error){
+		dataRef.auth(data.firebaseJwt, error => {
 		    if(error){
 			console.log('Failed authentication to firebase ' + error);
 		    }else{
@@ -145,14 +145,14 @@ function initSpringConsole(){
 
     var $bl = $('#beanList');
     $bl.empty();
-    $.getJSON('/spring/beanNames', function(data) {
+    $.getJSON('/spring/beanNames', data => {
 	beans = data;
-	$.each(data, function(index, val) {
+	$.each(data, (index, val) => {
 	    $bl.append($('<option></option>').attr('value',val).text(val));
 	});
     });
 
-    $bl.click(function(event){
+    $bl.click(event => {
 	showBeanInfo($(event.target).val());
     });
 
@@ -160,11 +160,11 @@ function initSpringConsole(){
 	loadScript($(this).val());
     });
 
-    $('#btnExec').click(function(){
+    $('#btnExec').click(() => {
 	postScript(cm.getValue());
     });
 
-    $('#btnSave').click(function(){
+    $('#btnSave').click(() => {
 	if($('#savedScripts').val()!=''){
 	    saveScript($('#savedScripts').val());
 	} else{
@@ -175,12 +175,12 @@ function initSpringConsole(){
 	}
     });
     
-    $('#btnClear').click(function(){
+    $('#btnClear').click(() => {
 	$('#savedScripts').val('');
 	cm.setValue('');
     });
 
-    $('#scriptName').keypress(function(e){
+    $('#scriptName').keypress(e => {
 	if(e.which!=13) return;
 	var input = $('#scriptName');
 	if(input.val().trim().length<=0){
@@ -191,7 +191,7 @@ function initSpringConsole(){
 	$('#saveAsDialog').modal('hide');	
     });
 
-    $('#scriptArea').parent().keydown(function(e){
+    $('#scriptArea').parent().keydown(e => {
 	if(event.ctrlKey){
 	    switch(event.which){
 		case 13: postScript(cm.getValue()); return;
@@ -202,7 +202,7 @@ function initSpringConsole(){
 	}
     });
     $('#scriptContainer').resizable({
-	resize: function() {
+	resize() {
 	    cm.setSize($(this).width(), $(this).height());
 	}
     });
@@ -216,15 +216,15 @@ function initSpringConsole(){
 	rt.height(rt.height()+gap/2);
     }
     //load server info
-    $.ajax({type:'GET', url:'/spring/serverinfo', contentType:'application/json', success:function(data){
+    $.ajax({type:'GET', url:'/spring/serverinfo', contentType:'application/json', success(data) {
 	$('#appLabel').text(data.appName + ' : ' + (data.hostname || ''));
     }});
     
-    $('#saveAsDialog').on('shown.bs.modal', function(){
+    $('#saveAsDialog').on('shown.bs.modal', () => {
 	var input = $('#scriptName');
 	input.val('').focus();
 	input.parent().removeClass('has-error');
-    }).on('hidden.bs.modal', function(){
+    }).on('hidden.bs.modal', () => {
 	cm.focus();
     });
 

@@ -111,7 +111,7 @@ function dbupdate(ds,sql){
 */
 function toRunnable(fun){
     return new java.lang.Runnable({
-    run: function(){
+    run() {
         fun();
     }
     });
